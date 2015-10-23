@@ -86,7 +86,7 @@ def DPMP_infer(mrf,
     x_prop = None
     if i > 0:
       # Propose new particles
-      if verbose: print '    ... Proposing new particles'
+      if verbose: print('    ... Proposing new particles')
       nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
       x_prop = proposal(x, mrf, nParticlesAdd)
 
