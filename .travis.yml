@@ -17,9 +17,9 @@ addons:
     packages:
       - libatlas3gf-base
       - libatlas-dev
-      - libblas-dev
+      # - libblas-dev
       - python-scipy
-      - python-numpy
+      # - python-numpy
 
 # command to install dependencies
 install: "pip install -r requirements.txt"
