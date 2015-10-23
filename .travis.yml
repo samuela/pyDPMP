@@ -15,9 +15,11 @@ python:
 addons:
   apt:
     packages:
-      # - libatlas3gf-base
-      # - libatlas-dev
+      - libatlas3gf-base
+      - libatlas-dev
+      - libblas-dev
       - python-scipy
+      - python-numpy
 
 # command to install dependencies
 install: "pip install -r requirements.txt"
