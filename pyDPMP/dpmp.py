@@ -79,7 +79,7 @@ def DPMP_infer(mrf,
   }
 
   for i in xrange(max_iters):
-    if verbose: print 'Iter', i
+    if verbose: print('Iter', i)
 
     # Sample new particles
     x_aug = None
@@ -96,7 +96,7 @@ def DPMP_infer(mrf,
       x_aug = x
 
     # Calculate potentials
-    if verbose: print '    ... Calculating potentials and MAP'
+    if verbose: print('    ... Calculating potentials and MAP')
     node_pot, edge_pot = calc_potentials(x_aug, mrf)
 
     # Calculate messages, log beliefs, and MAP states
@@ -111,7 +111,7 @@ def DPMP_infer(mrf,
     stats['msg_passing_stats'].append(msg_passing_stats)
 
     # Particle selection
-    if verbose: print '    ... Selecting particles'
+    if verbose: print('    ... Selecting particles')
     accept_idx = particle_selection.select(mrf, map_states, msg_passing, msgs, \
         x_aug, nParticles, node_pot, edge_pot, temp)
     x_sel = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}

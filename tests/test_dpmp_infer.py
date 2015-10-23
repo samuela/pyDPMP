@@ -40,7 +40,6 @@ def test_dpmp_infer_callback():
   called = [False]
   def callback(info):
     called[0] = True
-    print info['iter']
     return info['iter']
 
   xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \

@@ -32,7 +32,6 @@ def random_tree_mrf(V):
 
   node_pot = {v: np.log(np.random.rand(2)) for v in nodes}
   edge_pot = {e: np.log(np.random.rand(2, 2)) for e in edges}
-  print edge_pot
 
   mrf = MRF(nodes,
             edges,
