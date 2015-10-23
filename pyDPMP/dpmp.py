@@ -41,33 +41,53 @@ def DPMP_infer(mrf,
 
   Returns
   -------
-  TODO
+  xMAP : dict (v -> state)
+      The MAP decoding found.
+  x : dict (v -> list of particles)
+      The final particle set.
+  stats : dict
+      Contains
+        - 'logP', a list of the log probabilities of the MAP configurations at
+          each iteration.
+        - 'converged', a boolean specifying whether DPMP converged.
+        - 'last_iter', the number of iterations until convergence, if DPMP
+          converged.
   """
 
   # Handle default arguments
   if isinstance(nParticles, int):
     nParticles = {v: nParticles for v in mrf.nodes}
-  nAugmented = {v: 2 * nParticles[v] for v in mrf.nodes}
+  if nAugmented == None:
+    nAugmented = {v: 2 * nParticles[v] for v in mrf.nodes}
+  elif isinstance(nAugmented, int):
+    nAugmented = {v: nAugmented * nParticles[v] for v in mrf.nodes}
 
   # Start with initial particle set
   x = x0
 
-  stats = {'logP': [], 'converged': False, 'last_iter': None}
+  stats = {
+    'logP': [],
+    'n_ties': [],
+    'msg_passing_stats': [],
+    'callback_results': [],
+    'converged': False,
+    'last_iter': None
+  }
 
   for i in xrange(max_iters):
     if verbose: print 'Iter', i
 
     # Sample new particles
     x_aug = None
+    x_prop = None
     if i > 0:
       # Propose new particles
       if verbose: print '    ... Proposing new particles'
       nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
-      x_new = proposal(x, mrf, nParticlesAdd)
+      x_prop = proposal(x, mrf, nParticlesAdd)
 
       # Construct augmented particle set
-      # x_aug = [old_ps + new_ps for (old_ps, new_ps) in zip(x, x_new)]
-      x_aug = {v: x[v] + list(x_new[v]) for v in mrf.nodes}
+      x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
     else:
       x_aug = x
 
@@ -81,21 +101,48 @@ def DPMP_infer(mrf,
     map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
         node_bel_aug)
     logP_map = log_prob_states(mrf, map_states, node_pot, edge_pot)
+
     stats['logP'].append(logP_map)
+    stats['n_ties'].append(n_ties)
+    stats['msg_passing_stats'].append(msg_passing_stats)
 
     # Particle selection
     if verbose: print '    ... Selecting particles'
     accept_idx = particle_selection.select(mrf, map_states, msg_passing, msgs, \
         x_aug, nParticles, node_pot, edge_pot, temp)
-    x = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}
+    x_sel = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}
 
     # Callback
     if callback != None:
-      pass
+      cb_res = callback({
+        'mrf': mrf,
+        'x0': x0,
+        'nParticles': nParticles,
+        'proposal': proposal,
+        'particle_selection': particle_selection,
+        'msg_passing': msg_passing,
+        'max_iters': max_iters,
+        'conv_tol': conv_tol,
+        'nAugmented': nAugmented,
+        'temp': temp,
+        'verbose': verbose,
+
+        'iter': i,
+        'x': x,
+        'x_prop': x_prop,
+        'x_aug': x_aug,
+        'x_sel': x_sel,
+
+        'stats': stats
+      })
+      stats['callback_results'].append(cb_res)
+
+    # Set particles to be the selected particle set
+    x = x_sel
 
     # If the difference in logP between this iteration and the previous is less
     # than conv_tol, then we have converged
-    if i > 1 and abs(stats['logP'][-1] - stats['logP'][-2]) < conv_tol:
+    if i > 0 and abs(stats['logP'][-1] - stats['logP'][-2]) < conv_tol:
       stats['converged'] = True
       stats['last_iter'] = i
       break

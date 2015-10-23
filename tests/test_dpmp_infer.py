@@ -1,13 +1,14 @@
 import numpy as np
 
-from dpmp.mrf import MRF
-from dpmp.particleselection import SelectDiverse
-from dpmp.messagepassing import MaxSumBP
-from dpmp import DPMP_infer
+from pyDPMP.mrf import MRF
+from pyDPMP.particleselection import SelectDiverse
+from pyDPMP.messagepassing import MaxSumBP
+from pyDPMP import DPMP_infer
 
+from test_util import seeded
+
+@seeded
 def test_dpmp_infer():
-  np.random.seed(0)
-
   mrf = MRF([0, 1], [(0, 1)],
             lambda _1, x: -(x ** 2),
             lambda _1, _2, x, y: -((x - y) ** 2))

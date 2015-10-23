@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 
-from dpmp.mrf import MRF, calc_potentials
+from pyDPMP.mrf import MRF, calc_potentials
 
 def test_mrf_nbrs():
   V = 10

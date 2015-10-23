@@ -1,8 +1,9 @@
 import numpy as np
 
-from dpmp.mrf import MRF, calc_potentials
-from dpmp.messagepassing import MaxSumBP
+from pyDPMP.mrf import MRF, calc_potentials
+from pyDPMP.messagepassing import MaxSumBP
 from test_mrf import random_tree_mrf
+from test_util import seeded
 
 def test_maxsum_basic():
   node_pot_f = lambda s, x_s: np.log(x_s + 1)
@@ -53,6 +54,9 @@ def check_maxsum_tree(mrf):
   assert stats['converged'] == True
   assert stats['error'][-1] < 1e-10
 
+# For some reason decorating a test generator doesn't work. See
+# https://github.com/nose-devs/nose/issues/958.
+# @seeded
 def test_maxsum_trees():
   np.random.seed(0)
 
@@ -61,8 +65,3 @@ def test_maxsum_trees():
     yield check_maxsum_tree, mrf
 
 # TODO: test n_ties, test correctness
-
-if __name__ == '__main__':
-  test_maxsum_basic()
-  test_maxsum_basic_fwd_bwd()
-  test_maxsum_trees()
