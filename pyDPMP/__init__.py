@@ -1,4 +1,4 @@
 from .dpmp import *
-import messagepassing
-import mrf
-import particleselection
+from . import messagepassing
+from . import mrf
+from . import particleselection

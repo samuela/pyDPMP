@@ -5,7 +5,7 @@ from pyDPMP.particleselection import SelectDiverse
 from pyDPMP.messagepassing import MaxSumBP
 from pyDPMP import DPMP_infer
 
-from test_util import seeded
+from .test_util import seeded
 
 @seeded
 def test_dpmp_infer():

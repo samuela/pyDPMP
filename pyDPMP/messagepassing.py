@@ -103,7 +103,7 @@ class MaxSumBP(MessagePassingScheme):
 
     stats = {'last_iter': None, 'error': [], 'converged': False}
 
-    for it in xrange(self.max_iters):
+    for it in range(self.max_iters):
       # Set the damping factor
       damp = 1.0 if (it == 0) else self.stepsize
 
@@ -125,8 +125,10 @@ class MaxSumBP(MessagePassingScheme):
       # Check convergence
       edge_error = lambda s, t: \
           np.max(np.abs(np.exp(msg[(s, t)]) - np.exp(msg_old[(s, t)])))
+      # Add zero on the end to ensure that the list is non-empty and will
+      # default to zero.
       msg_diff = max([max(edge_error(s, t), edge_error(t, s))
-                      for (s, t) in self.mrf.edges])
+                      for (s, t) in self.mrf.edges] + [0.0])
       stats['error'].append(msg_diff)
 
       if it > 0 and msg_diff < self.conv_tol:

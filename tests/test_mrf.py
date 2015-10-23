@@ -7,7 +7,7 @@ from pyDPMP.mrf import MRF, calc_potentials
 def test_mrf_nbrs():
   V = 10
   mrf = MRF(range(V), [(0, v) for v in range(1, V)], None, None)
-  assert mrf.nbrs(0) == range(1, 10)
+  assert mrf.nbrs(0) == list(range(1, 10))
   assert mrf.nbrs(1) == [0]
 
 def test_calc_potentials_isingish():

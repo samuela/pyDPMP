@@ -2,8 +2,8 @@ import numpy as np
 
 from pyDPMP.mrf import MRF, calc_potentials
 from pyDPMP.messagepassing import MaxSumBP
-from test_mrf import random_tree_mrf
-from test_util import seeded
+from .test_mrf import random_tree_mrf
+from .test_util import seeded
 
 def test_maxsum_basic():
   """Test that maxsum converges on a simple graph with 2 nodes."""

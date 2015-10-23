@@ -1,4 +1,4 @@
-from mrf import calc_potentials, log_prob_states
+from .mrf import calc_potentials, log_prob_states
 
 def DPMP_infer(mrf,
                x0,
@@ -78,7 +78,7 @@ def DPMP_infer(mrf,
     'last_iter': None
   }
 
-  for i in xrange(max_iters):
+  for i in range(max_iters):
     if verbose: print('Iter', i)
 
     # Sample new particles
