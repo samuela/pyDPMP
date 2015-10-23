@@ -49,6 +49,10 @@ def DPMP_infer(mrf,
       Contains
         - 'logP', a list of the log probabilities of the MAP configurations at
           each iteration.
+        - 'n_ties', the number of message passing ties at each iteration.
+        - 'msg_passing_stats', the message passing stats at each iteration.
+        - 'callback_results', the result of the callback function, if it exists,
+          at each iteration.
         - 'converged', a boolean specifying whether DPMP converged.
         - 'last_iter', the number of iterations until convergence, if DPMP
           converged.
