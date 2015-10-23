@@ -6,6 +6,7 @@ from test_mrf import random_tree_mrf
 from test_util import seeded
 
 def test_maxsum_basic():
+  """Test that maxsum converges on a simple graph with 2 nodes."""
   node_pot_f = lambda s, x_s: np.log(x_s + 1)
   edge_pot_f = lambda s, t, x_s, x_t: np.log(x_s * x_t + 1)
   mrf = MRF([0, 1], [(0, 1)], node_pot_f, edge_pot_f)
@@ -20,6 +21,7 @@ def test_maxsum_basic():
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
 
 def test_maxsum_basic_fwd_bwd():
+  """Test the fwd/bwd schedule on a simple 2-node chain."""
   node_pot_f = lambda s, x_s: np.log(x_s + 1)
   edge_pot_f = lambda s, t, x_s, x_t: np.log(x_s * x_t + 1)
   mrf = MRF([0, 1], [(0, 1)], node_pot_f, edge_pot_f)
@@ -50,7 +52,6 @@ def check_maxsum_tree(mrf):
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
 
-  # print stats
   assert stats['converged'] == True
   assert stats['error'][-1] < 1e-10
 
@@ -58,6 +59,7 @@ def check_maxsum_tree(mrf):
 # https://github.com/nose-devs/nose/issues/958.
 # @seeded
 def test_maxsum_trees():
+  """Test that MaxSumBP converges on random tree-structured graphs."""
   np.random.seed(0)
 
   for _ in range(100):
