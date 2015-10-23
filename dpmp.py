@@ -68,7 +68,7 @@ class MaxSumBP(MessagePassingScheme):
   def __init__(self,
                mrf,
                max_iters=100,
-               conv_tol=1e-3,
+               conv_tol=1e-5,
                stepsize=1.0,
                sched=None):
     """Max-product belief propogation (max sum over log potentials).
@@ -77,7 +77,7 @@ class MaxSumBP(MessagePassingScheme):
     ----------
     mrf : MRF
     max_iters : int (default: 100)
-    conv_tol : float (default: 1e-3)
+    conv_tol : float (default: 1e-5)
     stepsize : float (default: 1.0)
     sched : list of edges or None
         The schedule by which messages should be sent. Defaults to
@@ -123,9 +123,6 @@ class MaxSumBP(MessagePassingScheme):
     stats = {'last_iter': None, 'error': [], 'converged': False}
 
     for it in xrange(self.max_iters):
-    #   print iters
-    #   print msg
-
       # Set the damping factor
       damp = 1.0 if (it == 0) else self.stepsize
 
@@ -178,13 +175,14 @@ class MaxSumBP(MessagePassingScheme):
     return map_state, n_ties
 
 class ParticleSelectionScheme(object):
-  def select(self, mrf, msg_passing, msg, x_aug, nSelect, node_pot, edge_pot, \
-      temp):
+  def select(self, mrf, map_state, msg_passing, msg, x_aug, nSelect, node_pot, \
+      edge_pot, temp):
     pass
 
 class SelectDiverse(ParticleSelectionScheme):
   def select(self, mrf, map_state, msg_passing, msg, x_aug, nSelect, node_pot, \
       edge_pot, temp):
+    """Run particle selection from the ICML 2014 paper (dpmpmax)."""
     nStates = {v: len(node_pot[v]) for v in mrf.nodes}
 
     I_accept = {v: [] for v in mrf.nodes}
@@ -213,8 +211,6 @@ class SelectDiverse(ParticleSelectionScheme):
         # Select next particle
         a_star = np.argmax(delta)
         min_a = delta[a_star]
-        # print Psi.shape
-        # print Psi[a_star, b_unused].shape
         idx_max = np.argmax(Psi[a_star, b_unused])
         b = b_unused[idx_max]
         I_accept[t].append(b)
@@ -234,9 +230,11 @@ def DPMP_infer(mrf,
                particle_selection,
                msg_passing,
                max_iters=100,
+               conv_tol=1e-5,
                nAugmented=None,
                callback=None,
-               temp=1.0):
+               temp=1.0,
+               verbose=False):
   """Run D-PMP inference.
 
   Parameters
@@ -246,10 +244,14 @@ def DPMP_infer(mrf,
       The initial particle set.
   nParticles : int or dict (v -> int)
       The number of particles to keep after selection each iteration.
-  proposal : TODO
+  proposal : function (x, mrf, nAdd -> list of particles)
   particle_selection : ParticleSelectionScheme
   msg_passing : MessagePassingScheme
   max_iters : int (default: 100)
+  conv_tol : float (default: 1e-5)
+      The log-probability convergence tolerance. If the log-probability of the
+      MAP decoding does not improve by more than conv_tol, then we assume
+      convergence and stop.
   nAugmented : int or dict (v -> int) or None (default: None)
       The number of particles to be selected from at every iteration. At each
       node, nAugmented determines the number of extra particles that will be
@@ -258,6 +260,7 @@ def DPMP_infer(mrf,
       The function to be called at the end of each iteration.
   temp : float (default: 1.0)
       Tricky. TODO.
+  verbose : boolean (default: False)
 
   Returns
   -------
@@ -272,19 +275,18 @@ def DPMP_infer(mrf,
   # Start with initial particle set
   x = x0
 
-  stats = {'logP': []}
+  stats = {'logP': [], 'converged': False, 'last_iter': None}
 
   for i in xrange(max_iters):
-    print i
-    print 'x', x
+    if verbose: print 'Iter', i
 
     # Sample new particles
     x_aug = None
     if i > 0:
       # Propose new particles
+      if verbose: print '    ... Proposing new particles'
       nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
       x_new = proposal(x, mrf, nParticlesAdd)
-      print 'prop', x_new
 
       # Construct augmented particle set
       # x_aug = [old_ps + new_ps for (old_ps, new_ps) in zip(x, x_new)]
@@ -293,6 +295,7 @@ def DPMP_infer(mrf,
       x_aug = x
 
     # Calculate potentials
+    if verbose: print '    ... Calculating potentials and MAP'
     node_pot, edge_pot = _calc_potentials(x_aug, mrf)
 
     # Calculate messages, log beliefs, and MAP states
@@ -304,19 +307,32 @@ def DPMP_infer(mrf,
     stats['logP'].append(logP_map)
 
     # Particle selection
+    if verbose: print '    ... Selecting particles'
     accept_idx = particle_selection.select(mrf, map_states, msg_passing, msgs, \
         x_aug, nParticles, node_pot, edge_pot, temp)
     x = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}
-    # node_pot = <select accept_idx>
-    # edge_pot = <select accept_idx>
 
     # Callback
     if callback != None:
       pass
 
-  # Run final message passing
+    # If the difference in logP between this iteration and the previous is less
+    # than conv_tol, then we have converged
+    if i > 1 and np.abs(stats['logP'][-1] - stats['logP'][-2]) < conv_tol:
+      stats['converged'] = True
+      stats['last_iter'] = i
+      break
 
-  return None
+  # Run final message passing
+  node_pot, edge_pot = _calc_potentials(x, mrf)
+
+  msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
+  node_bel_aug = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
+  map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
+      node_bel_aug)
+  xMAP = {v: x[v][map_states[v]] for v in mrf.nodes}
+
+  return xMAP, x, stats
 
 def test_dpmp_infer():
   np.random.seed(0)
@@ -331,8 +347,10 @@ def test_dpmp_infer():
   def proposal(x, mrf, nParticlesAdd):
     return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
 
-  DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(), MaxSumBP(mrf),
-      max_iters=50)
+  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \
+      SelectDiverse(), MaxSumBP(mrf), max_iters=50)
+
+  assert xMAP == {0: 0.0, 1: 0.0}
 
 if __name__ == '__main__':
   test_dpmp_infer()
