@@ -2,15 +2,37 @@ import numpy as np
 
 class MRF(object):
   def __init__(self, nodes, edges, node_pot, edge_pot):
-    self.nodes = nodes            # List of vertice IDs, 0, 1, 2, ..., V - 1
-    self.edges = edges            # List of pairs describing edge relationships
+    """Pairwise Markov Random Field.
+
+    Parameters
+    ----------
+    nodes : list of vertex IDs, not necessarily integers
+    edges : list of ordered pairs (s, t)
+        Should only contain (s, t) or (t, s) but not both.
+    node_pot : function (s, x_s -> R)
+        Function for evaluating log unary potentials.
+    edge_pot : function (s, t, x_s, x_t -> R)
+        Function for evaluating log pairwise potentials.
+    """
+    self.nodes = nodes
+    self.edges = edges
 
     # Single lambdas for each type of potential, since throwing around lambdas
     # everywhere isn't efficient.
-    self.node_pot = node_pot       # (s, x_s) -> R. The unary log potentials
-    self.edge_pot = edge_pot       # (s, t, x_s, x_t) -> R. The pairwise log potentials
+    self.node_pot = node_pot
+    self.edge_pot = edge_pot
 
   def nbrs(self, v):
+    """Get the neighbors of a given vertex.
+
+    Parameters
+    ----------
+    v : node
+
+    Returns
+    -------
+    List of nodes that are connected to v.
+    """
     return [t for t in self.nodes if ((v, t) in self.edges)
                                   or ((t, v) in self.edges)]
 
@@ -19,14 +41,16 @@ def _calc_potentials(x, mrf):
 
   Parameters
   ----------
-  x : TODO.
-
-  mrf : The MRF.
+  x : dict (v -> list of particles)
+      The particle set to evaluate.
+  mrf : MRF
 
   Returns
   -------
-  node_pot : dict (s -> [pot]) of log unary potentials
-  edge_pot : dict ((s,t) -> [[pot]]) matrix of log pairwise potentials
+  node_pot : dict (s -> [pot])
+      Log unary potentials.
+  edge_pot : dict ((s,t) -> [[pot]])
+      Matrix of log pairwise potentials.
   """
   node_pot = {}
   edge_pot = {}
@@ -44,14 +68,54 @@ def _calc_potentials(x, mrf):
   return node_pot, edge_pot
 
 def log_prob_states(mrf, states, node_pot, edge_pot):
+  """Evaluate the log probability of a particular state sequence.
+
+  Parameters
+  ----------
+  mrf : MRF
+  states : dict (v -> int)
+      A representation of the state of every node.
+  node_pot : dict (v -> array of unary potentials)
+      The log unary potentials for each particle at each node.
+  edge_pot : dict ((s, t) -> Ns x Nt matrix of pairwise potentials)
+      The log pairwise potentials for every pair of particles across each edge.
+
+  Returns
+  -------
+  The log probability of the given state assignment.
+  """
   return sum(node_pot[v][states[v]] for v in mrf.nodes) \
        + sum(edge_pot[(s, t)][states[s], states[t]] for (s, t) in mrf.edges)
 
 def fwd_bwd_sched(mrf):
+  """Constructs a forward-backward message update schedule.
+
+  It's assumed that the nodes are in a chain in the order they appear in
+  `mrf.nodes`.
+
+  Parameters
+  ----------
+  mrf : MRF
+
+  Returns
+  -------
+  Message update schedule.
+  """
   return zip(mrf.nodes, mrf.nodes[1:]) \
        + zip(reversed(mrf.nodes), reversed(mrf.nodes[:-1]))
 
 def full_sched(mrf):
+  """Returns a message update schedule that updates each edge in no particular
+  order.
+
+  Parameters
+  ----------
+  mrf : MRF
+
+  Returns
+  -------
+  A schedule which covers ever edge in every direction.
+  """
   return [(s, t) for (s, t) in mrf.edges] + [(t, s) for (s, t) in mrf.edges]
 
 class MessagePassingScheme(object):
@@ -78,7 +142,11 @@ class MaxSumBP(MessagePassingScheme):
     mrf : MRF
     max_iters : int (default: 100)
     conv_tol : float (default: 1e-5)
+        The message passing algorithm will abort once the maximum difference
+        between messages across iterations is less than `conv_tol`.
     stepsize : float (default: 1.0)
+        A factor which controls the "strength" of updates to messages. Use 1.0
+        for tree-structured graphs.
     sched : list of edges or None
         The schedule by which messages should be sent. Defaults to
         `full_sched(mrf)`.
@@ -94,7 +162,7 @@ class MaxSumBP(MessagePassingScheme):
     pot_s = node_pot[s]
 
     # Get edge potential between s and t (nStates[s] x nStates[t])
-    pot_st = edge_pot[(s, t)] if (s <= t) else edge_pot[(t, s)].T
+    pot_st = edge_pot[(s, t)] if (s, t) in edge_pot else edge_pot[(t, s)].T
 
     # Compute incoming messages to s except for t (nStates[s])
     incoming_msg = sum([msg[(v, s)] for v in self.mrf.nbrs(s) if v != t],
