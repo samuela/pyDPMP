@@ -1,5 +1,7 @@
 import numpy as np
-from dpmp import MRF, MaxSumBP, _calc_potentials
+
+from dpmp.mrf import MRF, calc_potentials
+from dpmp.messagepassing import MaxSumBP
 from test_mrf import random_tree_mrf
 
 def test_maxsum_basic():
@@ -9,7 +11,7 @@ def test_maxsum_basic():
 
   x = [[0, 0.5, 1], [0, 1]]
 
-  node_pot, edge_pot = _calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(x, mrf)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0, [(0, 1), (1, 0)])
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -23,7 +25,7 @@ def test_maxsum_basic_fwd_bwd():
 
   x = [[0, 0.5, 1], [0, 1]]
 
-  node_pot, edge_pot = _calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(x, mrf)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -40,7 +42,7 @@ def test_maxsum_basic_fwd_bwd():
 def check_maxsum_tree(mrf):
   x = [[0, 1]] * len(mrf.nodes)
 
-  node_pot, edge_pot = _calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(x, mrf)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)

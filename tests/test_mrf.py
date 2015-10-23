@@ -2,7 +2,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 
-from dpmp import MRF, _calc_potentials
+from dpmp.mrf import MRF, calc_potentials
 
 def test_mrf_nbrs():
   V = 10
@@ -17,7 +17,7 @@ def test_calc_potentials_isingish():
 
   x = [[0, 1], [0, 1]]
 
-  node_pot, edge_pot = _calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(x, mrf)
 
   np.testing.assert_almost_equal(node_pot[0], np.array([0, np.log(2)]))
   np.testing.assert_almost_equal(node_pot[1], np.array([0, np.log(2)]))
