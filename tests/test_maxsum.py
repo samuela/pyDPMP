@@ -14,7 +14,7 @@ def test_maxsum_basic():
 
   x = [[0, 0.5, 1], [0, 1]]
 
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0, [(0, 1), (1, 0)])
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -33,7 +33,7 @@ def test_maxsum_basic_fwd_bwd():
 
   x = [[0, 0.5, 1], [0, 1]]
 
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -60,7 +60,7 @@ def test_maxsum_2d_gaussian():
   mrf = MRF(nodes, edges, node_pot_f, edge_pot_f)
 
   x = {0: [-1.0, 0.0, 1.0], 1: [-1, 0.0, 1.0, 2.0]}
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumBP(mrf)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -86,7 +86,7 @@ def test_maxsum_2d_gaussian_alt():
   mrf = MRF(nodes, edges, node_pot_f, edge_pot_f)
 
   x = {0: [-2.0, -1.0, 0.0, 1.0, 2.0], 1: [-2.0, -1.0, 0.0, 1.0, 2.0]}
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumBP(mrf)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
@@ -109,7 +109,7 @@ def mrf_brute_MAP(mrf, node_pot, edge_pot):
 def check_maxsum_tree(mrf):
   x = {v: [0, 1] for v in mrf.nodes}
 
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)

@@ -36,14 +36,14 @@ def neighbors(mrf, v):
   return [t for t in mrf.nodes if ((v, t) in mrf.edges)
                                or ((t, v) in mrf.edges)]
 
-def calc_potentials(x, mrf):
+def calc_potentials(mrf, x):
   """Calculate all unary and pairwise log potentials.
 
   Parameters
   ----------
+  mrf : MRF
   x : dict (v -> list of particles)
       The particle set to evaluate.
-  mrf : MRF
 
   Returns
   -------

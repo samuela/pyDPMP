@@ -98,7 +98,7 @@ def DPMP_infer(mrf,
     # Calculate potentials on the augmented particle set
     if verbose: print('    ... Calculating potentials and MAP')
     if verbose: print('        ... potentials')
-    node_pot, edge_pot = calc_potentials(x_aug, mrf)
+    node_pot, edge_pot = calc_potentials(mrf, x_aug)
 
     # Calculate messages, log beliefs, and MAP states
     if verbose: print('        ... message passing')
@@ -156,7 +156,7 @@ def DPMP_infer(mrf,
       break
 
   # Run final message passing
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
   node_bel_aug = msg_passing.log_beliefs(node_pot, edge_pot, msgs)

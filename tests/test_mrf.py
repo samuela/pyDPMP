@@ -17,7 +17,7 @@ def test_calc_potentials_isingish():
 
   x = [[0, 1], [0, 1]]
 
-  node_pot, edge_pot = calc_potentials(x, mrf)
+  node_pot, edge_pot = calc_potentials(mrf, x)
 
   np.testing.assert_almost_equal(node_pot[0], np.array([0, np.log(2)]))
   np.testing.assert_almost_equal(node_pot[1], np.array([0, np.log(2)]))
