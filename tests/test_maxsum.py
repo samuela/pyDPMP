@@ -21,6 +21,10 @@ def test_maxsum_basic():
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
 
+  assert n_ties == 0
+  assert stats['converged'] == True
+  assert map_state == {0: 2, 1: 1}
+
 def test_maxsum_basic_fwd_bwd():
   """Test the fwd/bwd schedule on a simple 2-node chain."""
   node_pot_f = lambda s, x_s: np.log(x_s + 1)
