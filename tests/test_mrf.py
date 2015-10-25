@@ -2,13 +2,13 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 
-from pyDPMP.mrf import MRF, calc_potentials
+from pyDPMP.mrf import MRF, calc_potentials, neighbors
 
-def test_mrf_nbrs():
+def test_neighbors():
   V = 10
   mrf = MRF(range(V), [(0, v) for v in range(1, V)], None, None)
-  assert mrf.nbrs(0) == list(range(1, 10))
-  assert mrf.nbrs(1) == [0]
+  assert neighbors(mrf, 0) == list(range(1, 10))
+  assert neighbors(mrf, 1) == [0]
 
 def test_calc_potentials_isingish():
   node_pot_f = lambda s, x_s: np.log(x_s + 1)

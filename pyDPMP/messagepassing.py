@@ -1,5 +1,7 @@
 import numpy as np
 
+from .mrf import neighbors
+
 def fwd_bwd_sched(mrf):
   """Constructs a forward-backward message update schedule.
 
@@ -78,7 +80,7 @@ class MaxSumBP(MessagePassingScheme):
     pot_st = edge_pot[(s, t)] if (s, t) in edge_pot else edge_pot[(t, s)].T
 
     # Compute incoming messages to s except for t (nStates[s])
-    incoming_msg = sum([msg[(v, s)] for v in self.mrf.nbrs(s) if v != t],
+    incoming_msg = sum([msg[(v, s)] for v in neighbors(self.mrf, s) if v != t],
                        np.zeros(nStates[s]))
 
     # Return the total message matrix (nStates[s] x nStates[t])
@@ -145,7 +147,7 @@ class MaxSumBP(MessagePassingScheme):
     node_bel = {}
     for v in self.mrf.nodes:
       # Note that we start the sum with the node potentials.
-      pre_msg = sum([msg[(t, v)] for t in self.mrf.nbrs(v)], node_pot[v])
+      pre_msg = sum([msg[(t, v)] for t in neighbors(self.mrf, v)], node_pot[v])
       node_bel[v] = pre_msg - np.max(pre_msg)
 
     return node_bel

@@ -22,19 +22,19 @@ class MRF(object):
     self.node_pot = node_pot
     self.edge_pot = edge_pot
 
-  def nbrs(self, v):
-    """Get the neighbors of a given vertex.
+def neighbors(mrf, v):
+  """Get the neighbors of a given vertex.
 
-    Parameters
-    ----------
-    v : node
+  Parameters
+  ----------
+  v : node
 
-    Returns
-    -------
-    List of nodes that are connected to v.
-    """
-    return [t for t in self.nodes if ((v, t) in self.edges)
-                                  or ((t, v) in self.edges)]
+  Returns
+  -------
+  List of nodes that are connected to v.
+  """
+  return [t for t in mrf.nodes if ((v, t) in mrf.edges)
+                               or ((t, v) in mrf.edges)]
 
 def calc_potentials(x, mrf):
   """Calculate all unary and pairwise log potentials.

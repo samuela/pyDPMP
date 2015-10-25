@@ -1,5 +1,7 @@
 import numpy as np
 
+from .mrf import neighbors
+
 class ParticleSelectionScheme(object):
   def select(self, mrf, map_state, msg_passing, msg, x_aug, nSelect, node_pot, \
       edge_pot, temp):
@@ -16,7 +18,7 @@ class SelectDiverse(ParticleSelectionScheme):
       # Build the "stacked" message foundations matrix (S x T)
       M_t = np.vstack([msg_passing.message_foundation(node_pot, edge_pot, msg, \
                            nStates, t, s).T
-                       for s in mrf.nbrs(t)])
+                       for s in neighbors(mrf, t)])
 
       logMstar = np.max(M_t, axis=1)                        # (S,)
       logZ = 1.0 / temp * np.max(M_t)                       # scalar
