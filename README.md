@@ -1,6 +1,7 @@
 # pyDPMP
 [![Build Status](https://travis-ci.org/samuela/pyDPMP.svg)](https://travis-ci.org/samuela/pyDPMP)
 [![Coverage Status](https://coveralls.io/repos/samuela/pyDPMP/badge.svg?branch=master&service=github)](https://coveralls.io/github/samuela/pyDPMP?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/pyDPMP.svg)](https://pypi.python.org/pypi/pyDPMP/0.1.2)
 
 pyDPMP is a Python implementation of the Diverse Particle Max-Product algorithm
 (D-PMP) for maximum a posteriori estimation in continuous, pairwise Markov
