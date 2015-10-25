@@ -89,18 +89,19 @@ def DPMP_infer(mrf,
       if verbose: print('    ... Proposing new particles')
       nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
       x_prop = proposal(x, mrf, nParticlesAdd)
-      print(x_prop)
 
       # Construct augmented particle set
       x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
     else:
       x_aug = x
 
-    # Calculate potentials
+    # Calculate potentials on the augmented particle set
     if verbose: print('    ... Calculating potentials and MAP')
+    if verbose: print('        ... potentials')
     node_pot, edge_pot = calc_potentials(x_aug, mrf)
 
     # Calculate messages, log beliefs, and MAP states
+    if verbose: print('        ... message passing')
     msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
     node_bel_aug = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
     map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
@@ -117,6 +118,9 @@ def DPMP_infer(mrf,
     accept_idx = particle_selection.select(mrf, map_states, msg_passing, msgs, \
         x_aug, nParticles, node_pot, edge_pot, temp)
     x_sel = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}
+
+    # Set particles to be the selected particle set
+    x = x_sel
 
     # Callback
     if callback != None:
@@ -143,9 +147,6 @@ def DPMP_infer(mrf,
         'stats': stats
       })
       stats['callback_results'].append(cb_res)
-
-    # Set particles to be the selected particle set
-    x = x_sel
 
     # If the difference in logP between this iteration and the previous is less
     # than conv_tol, then we have converged
