@@ -65,3 +65,29 @@ def test_dpmp_infer_callback():
   assert called[0] == True
   assert stats['converged'] == True
   assert stats['callback_results'][-1] == stats['last_iter']
+
+@seeded
+def test_dpmp_infer_nAugmented_int():
+  """Test DPMP with nAugmented = 5."""
+
+  mrf = MRF([0, 1], [(0, 1)],
+            lambda _1, x: -(x ** 2),
+            lambda _1, _2, x, y: -((x - y) ** 2))
+  x0 = {0: [0.0], 1: [0.0]}
+  nParticles = 2
+  nAugmented = 5
+
+  def proposal(x, mrf, nParticlesAdd):
+    return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
+
+  def callback(info):
+    return info['x_aug']
+
+  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(),
+      MaxSumBP(mrf), nAugmented=nAugmented, max_iters=50, callback=callback)
+
+  assert xMAP == {0: 0.0, 1: 0.0}
+  assert stats['converged'] == True
+  assert all([len(stats['callback_results'][it][v]) == nAugmented
+              for it in range(len(stats['callback_results']))
+              for v in mrf.nodes])

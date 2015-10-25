@@ -64,7 +64,7 @@ def DPMP_infer(mrf,
   if nAugmented == None:
     nAugmented = {v: 2 * nParticles[v] for v in mrf.nodes}
   elif isinstance(nAugmented, int):
-    nAugmented = {v: nAugmented * nParticles[v] for v in mrf.nodes}
+    nAugmented = {v: nAugmented for v in mrf.nodes}
 
   # Start with initial particle set
   x = x0
@@ -81,20 +81,14 @@ def DPMP_infer(mrf,
   for i in range(max_iters):
     if verbose: print('Iter', i)
 
-    # Sample new particles
-    x_aug = None
-    x_prop = None
-    if i > 0:
-      # Propose new particles
-      if verbose: print('    ... Proposing new particles')
-      nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
-      x_prop = proposal(x, mrf, nParticlesAdd)
+    # Propose new particles
+    if verbose: print('    ... Proposing new particles')
+    nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
+    x_prop = proposal(x, mrf, nParticlesAdd)
 
-      # Construct augmented particle set
-      x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
-    else:
-      x_aug = x
-
+    # Construct augmented particle set
+    x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
+    
     # Calculate potentials on the augmented particle set
     if verbose: print('    ... Calculating potentials and MAP')
     if verbose: print('        ... potentials')
