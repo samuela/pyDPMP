@@ -2,7 +2,6 @@ import numpy as np
 import random
 
 from functools import wraps
-from nose.tools import make_decorator
 
 def set_seed(seed=0):
   np.random.seed(seed)

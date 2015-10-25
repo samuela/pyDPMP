@@ -7,5 +7,6 @@ setup(
   author='Samuel Ainsworth',
   author_email='skainsworth@gmail.com',
   url='https://github.com/samuela/pyDPMP',
-  packages=['pyDPMP']
+  packages=['pyDPMP'],
+  install_requires=['numpy']
 )
