@@ -2,9 +2,17 @@ import numpy as np
 import itertools
 
 from pyDPMP.mrf import MRF, calc_potentials, log_prob_states
-from pyDPMP.messagepassing import MaxSumBP
+from pyDPMP.messagepassing import MaxSumBP, fwd_bwd_sched
 from pyDPMP.util import seeded
 from .test_mrf import random_tree_mrf
+
+def test_fwd_bwd_sched():
+  """Test the forward/backward schedule."""
+  nodes = ['a', 'b', 'c', 'd']
+  mrf = MRF(nodes, None, None, None)
+  sched = fwd_bwd_sched(mrf)
+  exp = [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'c'), ('c', 'b'), ('b', 'a')]
+  assert sched == exp
 
 def test_maxsum_basic():
   """Test that maxsum converges on a simple graph with 2 nodes."""
@@ -27,6 +35,29 @@ def test_maxsum_basic():
 
 def test_maxsum_basic_fwd_bwd():
   """Test the fwd/bwd schedule on a simple 2-node chain."""
+  node_pot_f = lambda s, x_s: np.log(x_s + 1)
+  edge_pot_f = lambda s, t, x_s, x_t: np.log(x_s * x_t + 1)
+  mrf = MRF([0, 1], [(0, 1)], node_pot_f, edge_pot_f)
+
+  x = [[0, 0.5, 1], [0, 1]]
+
+  node_pot, edge_pot = calc_potentials(mrf, x)
+
+  sched = fwd_bwd_sched(mrf)
+  maxsum = MaxSumBP(mrf, 100, 0.001, 1.0, sched=sched)
+  msgs, stats = maxsum.messages(node_pot, edge_pot)
+  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+
+  assert stats['converged'] == True
+  assert stats['last_iter'] == 1
+  assert stats['error'][-1] == 0.0
+
+  assert map_state == {0: 2, 1: 1}
+  assert n_ties == 0
+
+def test_maxsum_basic_auto_sched():
+  """Test the auto schedule on a simple 2-node chain."""
   node_pot_f = lambda s, x_s: np.log(x_s + 1)
   edge_pot_f = lambda s, t, x_s, x_t: np.log(x_s * x_t + 1)
   mrf = MRF([0, 1], [(0, 1)], node_pot_f, edge_pot_f)
