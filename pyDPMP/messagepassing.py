@@ -16,8 +16,8 @@ def fwd_bwd_sched(mrf):
   -------
   Message update schedule.
   """
-  return zip(mrf.nodes, mrf.nodes[1:]) \
-       + zip(reversed(mrf.nodes), reversed(mrf.nodes[:-1]))
+  return list(zip(mrf.nodes, mrf.nodes[1:])) \
+       + list(zip(reversed(mrf.nodes), reversed(mrf.nodes[:-1])))
 
 def full_sched(mrf):
   """Returns a message update schedule that updates each edge in no particular
