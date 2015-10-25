@@ -21,8 +21,13 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose
   # - conda install --yes -c dan_blanchard python-coveralls nose-cov
   # - python setup.py install
+  - pip install coveralls
 
-script: nosetests
+script:
+  nosetests --with-coverage
+
+after_success:
+  coveralls
 
 notifications:
   email: false
