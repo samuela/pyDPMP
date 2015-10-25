@@ -4,14 +4,13 @@ import random
 from functools import wraps
 from nose.tools import make_decorator
 
-SEED = 0
+def set_seed(seed=0):
+  np.random.seed(seed)
+  random.seed(seed)
 
-# @make_decorator
-def seeded(f):
+def seeded(f, seed=0):
   @wraps(f)
-  # @make_decorator
   def f_seeded(*args, **kwargs):
-    np.random.seed(SEED)
-    random.seed(SEED)
+    set_seed(seed)
     return f(*args, **kwargs)
   return f_seeded

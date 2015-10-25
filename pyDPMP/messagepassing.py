@@ -144,8 +144,8 @@ class MaxSumBP(MessagePassingScheme):
 
     node_bel = {}
     for v in self.mrf.nodes:
-      pre_msg = sum([msg[(t, v)] for t in self.mrf.nbrs(v)],
-                    np.zeros(nStates[v]))
+      # Note that we start the sum with the node potentials.
+      pre_msg = sum([msg[(t, v)] for t in self.mrf.nbrs(v)], node_pot[v])
       node_bel[v] = pre_msg - np.max(pre_msg)
 
     return node_bel

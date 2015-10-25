@@ -89,6 +89,7 @@ def DPMP_infer(mrf,
       if verbose: print('    ... Proposing new particles')
       nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
       x_prop = proposal(x, mrf, nParticlesAdd)
+      print(x_prop)
 
       # Construct augmented particle set
       x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
@@ -105,6 +106,7 @@ def DPMP_infer(mrf,
     map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
         node_bel_aug)
     logP_map = log_prob_states(mrf, map_states, node_pot, edge_pot)
+    xMAP = {v: x_aug[v][map_states[v]] for v in mrf.nodes}
 
     stats['logP'].append(logP_map)
     stats['n_ties'].append(n_ties)
@@ -136,6 +138,7 @@ def DPMP_infer(mrf,
         'x_prop': x_prop,
         'x_aug': x_aug,
         'x_sel': x_sel,
+        'xMAP': xMAP,
 
         'stats': stats
       })
