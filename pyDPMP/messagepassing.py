@@ -40,7 +40,7 @@ class MessagePassingScheme(object):
   def messages(self, node_pot, edge_pot):
     pass
 
-  def log_beliefs(self, node_pot, edge_pot):
+  def log_beliefs(self, node_pot, edge_pot, msg):
     pass
 
 class MaxSumBP(MessagePassingScheme):
@@ -142,8 +142,6 @@ class MaxSumBP(MessagePassingScheme):
     return msg, stats
 
   def log_beliefs(self, node_pot, edge_pot, msg):
-    nStates = {v: len(node_pot[v]) for v in self.mrf.nodes}
-
     node_bel = {}
     for v in self.mrf.nodes:
       # Note that we start the sum with the node potentials.
