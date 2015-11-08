@@ -38,7 +38,6 @@ class SelectDiverse(ParticleSelectionScheme):
 
         # Select next particle
         a_star = np.argmax(delta)
-        min_a = delta[a_star]
         idx_max = np.argmax(Psi[a_star, b_unused])
         b = b_unused[idx_max]
         I_accept[t].append(b)
