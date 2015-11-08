@@ -29,7 +29,7 @@ def full_sched(mrf):
 
   Returns
   -------
-  A schedule which covers ever edge in every direction.
+  A schedule which covers every edge in both directions.
   """
   return [(s, t) for (s, t) in mrf.edges] + [(t, s) for (s, t) in mrf.edges]
 
