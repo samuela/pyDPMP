@@ -88,7 +88,7 @@ def DPMP_infer(mrf,
 
     # Construct augmented particle set
     x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
-    
+
     # Calculate potentials on the augmented particle set
     if verbose: print('    ... Calculating potentials and MAP')
     if verbose: print('        ... potentials')
