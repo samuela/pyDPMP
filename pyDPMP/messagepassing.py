@@ -43,7 +43,7 @@ class MessagePassingScheme(object):
   def log_beliefs(self, node_pot, edge_pot, msg):
     pass
 
-class MaxSumBP(MessagePassingScheme):
+class MaxSumMP(MessagePassingScheme):
   def __init__(self,
                mrf,
                max_iters=100,

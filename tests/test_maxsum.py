@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 
 from pyDPMP.mrf import MRF, calc_potentials, log_prob_states
-from pyDPMP.messagepassing import MaxSumBP, fwd_bwd_sched
+from pyDPMP.messagepassing import MaxSumMP, fwd_bwd_sched
 from pyDPMP.util import seeded
 from .test_mrf import random_tree_mrf
 
@@ -24,7 +24,7 @@ def test_maxsum_basic():
 
   node_pot, edge_pot = calc_potentials(mrf, x)
 
-  maxsum = MaxSumBP(mrf, 100, 0.001, 1.0, [(0, 1), (1, 0)])
+  maxsum = MaxSumMP(mrf, 100, 0.001, 1.0, [(0, 1), (1, 0)])
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -44,7 +44,7 @@ def test_maxsum_basic_fwd_bwd():
   node_pot, edge_pot = calc_potentials(mrf, x)
 
   sched = fwd_bwd_sched(mrf)
-  maxsum = MaxSumBP(mrf, 100, 0.001, 1.0, sched=sched)
+  maxsum = MaxSumMP(mrf, 100, 0.001, 1.0, sched=sched)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -66,7 +66,7 @@ def test_maxsum_basic_auto_sched():
 
   node_pot, edge_pot = calc_potentials(mrf, x)
 
-  maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
+  maxsum = MaxSumMP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -93,7 +93,7 @@ def test_maxsum_2d_gaussian():
   x = {0: [-1.0, 0.0, 1.0], 1: [-1, 0.0, 1.0, 2.0]}
   node_pot, edge_pot = calc_potentials(mrf, x)
 
-  maxsum = MaxSumBP(mrf)
+  maxsum = MaxSumMP(mrf)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -119,7 +119,7 @@ def test_maxsum_2d_gaussian_alt():
   x = {0: [-2.0, -1.0, 0.0, 1.0, 2.0], 1: [-2.0, -1.0, 0.0, 1.0, 2.0]}
   node_pot, edge_pot = calc_potentials(mrf, x)
 
-  maxsum = MaxSumBP(mrf)
+  maxsum = MaxSumMP(mrf)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -142,7 +142,7 @@ def check_maxsum_tree(mrf):
 
   node_pot, edge_pot = calc_potentials(mrf, x)
 
-  maxsum = MaxSumBP(mrf, 100, 0.001, 1.0)
+  maxsum = MaxSumMP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
   node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
   map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
@@ -158,7 +158,7 @@ def check_maxsum_tree(mrf):
 # https://github.com/nose-devs/nose/issues/958.
 # @seeded
 def test_maxsum_trees():
-  """Test that MaxSumBP converges on random tree-structured graphs."""
+  """Test that MaxSumMP converges on random tree-structured graphs."""
   np.random.seed(0)
 
   for _ in range(100):
