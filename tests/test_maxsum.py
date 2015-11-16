@@ -3,7 +3,7 @@ import itertools
 
 from pyDPMP.mrf import MRF, calc_potentials, log_prob_states
 from pyDPMP.messagepassing import MaxSumMP, fwd_bwd_sched
-from pyDPMP.util import seeded
+from pyDPMP.util import set_seed
 from .test_mrf import random_tree_mrf
 
 def test_fwd_bwd_sched():
@@ -159,7 +159,7 @@ def check_maxsum_tree(mrf):
 # @seeded
 def test_maxsum_trees():
   """Test that MaxSumMP converges on random tree-structured graphs."""
-  np.random.seed(0)
+  set_seed(0)
 
   for _ in range(100):
     mrf = random_tree_mrf(10)
