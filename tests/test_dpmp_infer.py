@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyDPMP.messagepassing import MaxSumBP
+from pyDPMP.messagepassing import MaxSumMP
 from pyDPMP.mrf import MRF
 from pyDPMP.particleselection import SelectDiverse
 from pyDPMP.proposals import random_walk_proposal_1d
@@ -20,7 +20,7 @@ def test_dpmp_infer():
     return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
 
   xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \
-      SelectDiverse(), MaxSumBP(mrf), max_iters=50)
+      SelectDiverse(), MaxSumMP(mrf), max_iters=50)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
@@ -37,7 +37,7 @@ def test_dpmp_infer_rw_prop_1d():
   prop = random_walk_proposal_1d(10)
 
   xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, prop, SelectDiverse(), \
-      MaxSumBP(mrf), max_iters=50)
+      MaxSumMP(mrf), max_iters=50)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
@@ -60,7 +60,7 @@ def test_dpmp_infer_callback():
     return info['iter']
 
   xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \
-      SelectDiverse(), MaxSumBP(mrf), max_iters=50, callback=callback)
+      SelectDiverse(), MaxSumMP(mrf), max_iters=50, callback=callback)
 
   assert called[0] == True
   assert stats['converged'] == True
@@ -84,7 +84,7 @@ def test_dpmp_infer_nAugmented_int():
     return info['x_aug']
 
   xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(),
-      MaxSumBP(mrf), nAugmented=nAugmented, max_iters=50, callback=callback)
+      MaxSumMP(mrf), nAugmented=nAugmented, max_iters=50, callback=callback)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
