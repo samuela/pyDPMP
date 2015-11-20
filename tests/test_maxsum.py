@@ -1,10 +1,9 @@
 import numpy as np
-import itertools
 
+from pyDPMP.messagepassing import MaxSumMP, fwd_bwd_sched, decode_MAP_states
 from pyDPMP.mrf import MRF, calc_potentials, log_prob_states
-from pyDPMP.messagepassing import MaxSumMP, fwd_bwd_sched
 from pyDPMP.util import set_seed
-from .test_mrf import random_tree_mrf
+from .test_util import random_tree_mrf, mrf_brute_MAP
 
 def test_fwd_bwd_sched():
   """Test the forward/backward schedule."""
@@ -26,8 +25,8 @@ def test_maxsum_basic():
 
   maxsum = MaxSumMP(mrf, 100, 0.001, 1.0, [(0, 1), (1, 0)])
   msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = decode_MAP_states(mrf, node_bel)
 
   assert n_ties == 0
   assert stats['converged'] == True
@@ -46,8 +45,8 @@ def test_maxsum_basic_fwd_bwd():
   sched = fwd_bwd_sched(mrf)
   maxsum = MaxSumMP(mrf, 100, 0.001, 1.0, sched=sched)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = decode_MAP_states(mrf, node_bel)
 
   assert stats['converged'] == True
   assert stats['last_iter'] == 1
@@ -68,8 +67,8 @@ def test_maxsum_basic_auto_sched():
 
   maxsum = MaxSumMP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = decode_MAP_states(mrf, node_bel)
 
   assert stats['converged'] == True
   assert stats['last_iter'] == 1
@@ -86,7 +85,8 @@ def test_maxsum_2d_gaussian():
   nodes = [0, 1]
   edges = [(0, 1)]
   node_pot_f = lambda s, x_s: -0.5 * cov_i[s, s] * ((x_s - mu[s]) ** 2)
-  edge_pot_f = lambda s, t, x_s, x_t: -0.5 * (x_s - mu[s]) * (x_t - mu[t]) * (cov_i[s,t] + cov_i[t,s])
+  edge_pot_f = lambda s, t, x_s, x_t: \
+      -0.5 * (x_s - mu[s]) * (x_t - mu[t]) * (cov_i[s, t] + cov_i[t, s])
 
   mrf = MRF(nodes, edges, node_pot_f, edge_pot_f)
 
@@ -94,9 +94,9 @@ def test_maxsum_2d_gaussian():
   node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumMP(mrf)
-  msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  msgs, _ = maxsum.messages(node_pot, edge_pot)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = decode_MAP_states(mrf, node_bel)
   xMAP = {v: x[v][map_state[v]] for v in mrf.nodes}
 
   assert n_ties == 0
@@ -120,22 +120,13 @@ def test_maxsum_2d_gaussian_alt():
   node_pot, edge_pot = calc_potentials(mrf, x)
 
   maxsum = MaxSumMP(mrf)
-  msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  msgs, _ = maxsum.messages(node_pot, edge_pot)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, n_ties = decode_MAP_states(mrf, node_bel)
   xMAP = {v: x[v][map_state[v]] for v in mrf.nodes}
 
   assert n_ties == 0
   assert xMAP == {0: 0.0, 1: 0.0}
-
-def mrf_brute_MAP(mrf, node_pot, edge_pot):
-  """Compute the MAP by brute force. Assumes that the nodes are 0, 1, 2, ..."""
-  ranges = [range(len(node_pot[v])) for v in mrf.nodes]
-  best_map = max(itertools.product(*ranges),
-                 key=lambda s: log_prob_states(mrf, s, node_pot, edge_pot))
-
-  # We generally use dicts for the MAP states, so convert for consistency
-  return {v: best_map[v] for v in mrf.nodes}
 
 def check_maxsum_tree(mrf):
   x = {v: [0, 1] for v in mrf.nodes}
@@ -144,8 +135,8 @@ def check_maxsum_tree(mrf):
 
   maxsum = MaxSumMP(mrf, 100, 0.001, 1.0)
   msgs, stats = maxsum.messages(node_pot, edge_pot)
-  node_bel = maxsum.log_beliefs(node_pot, edge_pot, msgs)
-  map_state, n_ties = maxsum.decode_MAP_states(node_pot, edge_pot, node_bel)
+  node_bel, _ = maxsum.log_beliefs(node_pot, edge_pot, msgs)
+  map_state, _ = decode_MAP_states(mrf, node_bel)
   xMAP = {v: x[v][map_state[v]] for v in mrf.nodes}
 
   brute_MAP = mrf_brute_MAP(mrf, node_pot, edge_pot)
@@ -165,4 +156,43 @@ def test_maxsum_trees():
     mrf = random_tree_mrf(10)
     yield check_maxsum_tree, mrf
 
-# TODO: test n_ties
+def test_n_ties1():
+  mrf = MRF([0, 1], [(0, 1)], None, None)
+  node_bel = {0: np.zeros(2), 1: np.zeros(2)}
+
+  _, n_ties = decode_MAP_states(mrf, node_bel)
+  assert n_ties == 2
+
+def test_n_ties2():
+  mrf = MRF([0, 1], [(0, 1)], None, None)
+  node_bel = {0: np.zeros(10), 1: 1e-5 * np.random.rand(10)}
+
+  _, n_ties = decode_MAP_states(mrf, node_bel)
+  assert n_ties == 18
+
+def test_n_ties3():
+  mrf = MRF([0, 1], [(0, 1)], None, None)
+  node_bel = {0: np.zeros(10), 1: 5 * np.random.rand(10)}
+
+  _, n_ties = decode_MAP_states(mrf, node_bel, epsilon=5)
+  assert n_ties == 18
+
+def test_logP():
+  """Test that the final logP for a tree is the true MAP logP."""
+  set_seed(0)
+
+  mrf = random_tree_mrf(10)
+  x = {v: [0, 1] for v in mrf.nodes}
+
+  node_pot, edge_pot = calc_potentials(mrf, x)
+
+  maxsum = MaxSumMP(mrf, 100, 0.001, stepsize=0.75)
+  _, stats = maxsum.messages(node_pot, edge_pot, calc_logP=True)
+
+  brute_MAP = mrf_brute_MAP(mrf, node_pot, edge_pot)
+
+  np.testing.assert_almost_equal(
+      stats['logP'][-1],
+      log_prob_states(mrf, node_pot, edge_pot, brute_MAP))
+
+# TODO: test edge beliefs

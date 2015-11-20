@@ -67,18 +67,18 @@ def calc_potentials(mrf, x):
 
   return node_pot, edge_pot
 
-def log_prob_states(mrf, states, node_pot, edge_pot):
+def log_prob_states(mrf, node_pot, edge_pot, states):
   """Evaluate the log probability of a particular state sequence.
 
   Parameters
   ----------
   mrf : MRF
-  states : dict (v -> int)
-      A representation of the state of every node.
   node_pot : dict (v -> array of unary potentials)
       The log unary potentials for each particle at each node.
   edge_pot : dict ((s, t) -> Ns x Nt matrix of pairwise potentials)
       The log pairwise potentials for every pair of particles across each edge.
+  states : dict (v -> int)
+      A representation of the state of every node.
 
   Returns
   -------

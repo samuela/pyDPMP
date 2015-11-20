@@ -1,3 +1,4 @@
+from .messagepassing import decode_MAP_states
 from .mrf import calc_potentials, log_prob_states
 
 def DPMP_infer(mrf,
@@ -97,10 +98,9 @@ def DPMP_infer(mrf,
     # Calculate messages, log beliefs, and MAP states
     if verbose: print('        ... message passing')
     msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
-    node_bel_aug = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
-    map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
-        node_bel_aug)
-    logP_map = log_prob_states(mrf, map_states, node_pot, edge_pot)
+    node_bel_aug, _ = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
+    map_states, n_ties = decode_MAP_states(mrf, node_bel_aug)
+    logP_map = log_prob_states(mrf, node_pot, edge_pot, map_states)
     xMAP = {v: x_aug[v][map_states[v]] for v in mrf.nodes}
 
     stats['logP'].append(logP_map)
@@ -153,9 +153,8 @@ def DPMP_infer(mrf,
   node_pot, edge_pot = calc_potentials(mrf, x)
 
   msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
-  node_bel_aug = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
-  map_states, n_ties = msg_passing.decode_MAP_states(node_pot, edge_pot, \
-      node_bel_aug)
+  node_bel_aug, _ = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
+  map_states, n_ties = decode_MAP_states(mrf, node_bel_aug)
   xMAP = {v: x[v][map_states[v]] for v in mrf.nodes}
 
   return xMAP, x, stats
