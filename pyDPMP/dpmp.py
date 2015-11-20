@@ -22,7 +22,7 @@ def DPMP_infer(mrf,
       The initial particle set.
   nParticles : int or dict (v -> int)
       The number of particles to keep after selection each iteration.
-  proposal : function (x, mrf, nAdd -> list of particles)
+  proposal : function (mrf, nAdd, x -> list of particles)
   particle_selection : ParticleSelectionScheme
   msg_passing : MessagePassingScheme
   max_iters : int (default: 100)
@@ -85,7 +85,7 @@ def DPMP_infer(mrf,
     # Propose new particles
     if verbose: print('    ... Proposing new particles')
     nParticlesAdd = {v: nAugmented[v] - len(x[v]) for v in mrf.nodes}
-    x_prop = proposal(x, mrf, nParticlesAdd)
+    x_prop = proposal(mrf, nParticlesAdd, x)
 
     # Construct augmented particle set
     x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}

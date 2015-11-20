@@ -18,7 +18,7 @@ def random_walk_proposal(cov):
   d = cov.shape[0]
   mu = np.zeros(d)
 
-  def proposal(x, mrf, nAdd):
+  def proposal(mrf, nAdd, x):
     x_prop = {}
     for v in mrf.nodes:
       x_prop[v] = [np.random.multivariate_normal(mu, cov) + random.choice(x[v])
@@ -40,7 +40,7 @@ def random_walk_proposal_1d(sig):
   proposal : function
       A random walk proposal function.
   """
-  def proposal(x, mrf, nAdd):
+  def proposal(mrf, nAdd, x):
     x_prop = {}
     for v in mrf.nodes:
       x_prop[v] = [sig * np.random.randn() + random.choice(x[v])

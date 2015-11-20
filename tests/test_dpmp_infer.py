@@ -16,11 +16,11 @@ def test_dpmp_infer():
   x0 = {0: [0.0], 1: [0.0]}
   nParticles = 5
 
-  def proposal(x, mrf, nParticlesAdd):
+  def proposal(mrf, nParticlesAdd, _):
     return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
 
-  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \
-      SelectDiverse(), MaxSumMP(mrf), max_iters=50)
+  xMAP, _, stats = DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(),
+                              MaxSumMP(mrf), max_iters=50)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
@@ -36,8 +36,8 @@ def test_dpmp_infer_rw_prop_1d():
 
   prop = random_walk_proposal_1d(10)
 
-  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, prop, SelectDiverse(), \
-      MaxSumMP(mrf), max_iters=50)
+  xMAP, _, stats = DPMP_infer(mrf, x0, nParticles, prop, SelectDiverse(),
+                              MaxSumMP(mrf), max_iters=50)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
@@ -51,7 +51,7 @@ def test_dpmp_infer_callback():
   x0 = {0: [0.0], 1: [0.0]}
   nParticles = 5
 
-  def proposal(x, mrf, nParticlesAdd):
+  def proposal(mrf, nParticlesAdd, _):
     return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
 
   called = [False]
@@ -59,8 +59,9 @@ def test_dpmp_infer_callback():
     called[0] = True
     return info['iter']
 
-  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, \
-      SelectDiverse(), MaxSumMP(mrf), max_iters=50, callback=callback)
+  _, _, stats = DPMP_infer(mrf, x0, nParticles, proposal,
+                           SelectDiverse(), MaxSumMP(mrf), max_iters=50,
+                           callback=callback)
 
   assert called[0] == True
   assert stats['converged'] == True
@@ -77,14 +78,15 @@ def test_dpmp_infer_nAugmented_int():
   nParticles = 2
   nAugmented = 5
 
-  def proposal(x, mrf, nParticlesAdd):
+  def proposal(mrf, nParticlesAdd, _):
     return {v: list(100 * np.random.randn(nParticlesAdd[v])) for v in mrf.nodes}
 
   def callback(info):
     return info['x_aug']
 
-  xMAP, x, stats = DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(),
-      MaxSumMP(mrf), nAugmented=nAugmented, max_iters=50, callback=callback)
+  xMAP, _, stats = DPMP_infer(mrf, x0, nParticles, proposal, SelectDiverse(),
+                              MaxSumMP(mrf), nAugmented=nAugmented,
+                              max_iters=50, callback=callback)
 
   assert xMAP == {0: 0.0, 1: 0.0}
   assert stats['converged'] == True
