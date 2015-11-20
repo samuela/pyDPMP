@@ -48,3 +48,6 @@ def random_walk_proposal_1d(sig):
     return x_prop
 
   return proposal
+
+def mixture_proposal(props, weights=None):
+  pass
