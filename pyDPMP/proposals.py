@@ -50,4 +50,23 @@ def random_walk_proposal_1d(sig):
   return proposal
 
 def mixture_proposal(props, weights=None):
-  pass
+  """Mixture of multiple proposals.
+
+  Parameters
+  ----------
+  props : list of proposal functions
+  weights : None or a list of probabilities which sum to 1 (default: None)
+      If None, then proposals will be selected uniformly.
+
+  Returns
+  -------
+  proposal : function
+      A proposal function which will select a new proposal at random on each
+      invocation. In other words, at each iteration of D-PMP one of the given
+      proposals will be chosen at random according to the weights and applied.
+  """
+  ws = (1.0 / len(props)) * np.ones(len(props)) \
+       if weights == None else weights
+  def proposal(mrf, nAdd, x):
+    return np.random.choice(props, p=ws)(mrf, nAdd, x)
+  return proposal
