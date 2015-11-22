@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
   name='pyDPMP',
-  version='0.1.2',
+  version='0.1.3',
   description='The Diverse Particle Max-Product algorithm (D-PMP)',
   author='Samuel Ainsworth',
   author_email='skainsworth@gmail.com',
