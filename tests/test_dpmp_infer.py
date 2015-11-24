@@ -3,7 +3,7 @@ import numpy as np
 from pyDPMP.messagepassing import MaxSumMP
 from pyDPMP.mrf import MRF
 from pyDPMP.particleselection import SelectDiverse, SelectLazyGreedy
-from pyDPMP.proposals import random_walk_proposal_1d
+from pyDPMP.proposals import random_walk_proposal_1d, mixture_proposal
 from pyDPMP.util import seeded
 from pyDPMP import DPMP_infer
 
@@ -181,3 +181,22 @@ def test_dpmp_infer_nAugmented_int_lg():
   assert all([len(stats['callback_results'][it][v]) == nAugmented
               for it in range(len(stats['callback_results']))
               for v in mrf.nodes])
+
+@seeded
+def test_dpmp_infer_rw_prop_1d_mixed():
+  """Test DPMP when the true MAP is in x0. Final MAP should the true MAP."""
+  mrf = MRF([0, 1], [(0, 1)],
+            lambda _1, x: -(x ** 2),
+            lambda _1, _2, x, y: -((x - y) ** 2))
+  x0 = {0: [0.0], 1: [0.0]}
+  nParticles = 5
+
+  prop1 = random_walk_proposal_1d(10)
+  prop2 = random_walk_proposal_1d(5)
+  prop = mixture_proposal([prop1, prop2])
+
+  xMAP, _, stats = DPMP_infer(mrf, x0, nParticles, prop, SelectDiverse(),
+                              MaxSumMP(mrf), max_iters=50)
+
+  assert xMAP == {0: 0.0, 1: 0.0}
+  assert stats['converged'] == True
