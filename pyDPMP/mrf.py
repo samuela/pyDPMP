@@ -1,40 +1,34 @@
 import numpy as np
+from collections import namedtuple
+
+
+Factor = namedtuple('Factor', ['nodes', 'potential'])
 
 class MRF(object):
-  def __init__(self, nodes, edges, node_pot, edge_pot):
+  def __init__(self, nodes, factors):
     """Pairwise Markov Random Field.
 
     Parameters
     ----------
     nodes : list of vertex IDs, not necessarily integers
-    edges : list of ordered pairs (s, t)
-        Should only contain (s, t) or (t, s) but not both.
-    node_pot : function (s, x_s -> R)
-        Function for evaluating log unary potentials.
-    edge_pot : function (s, t, x_s, x_t -> R)
-        Function for evaluating log pairwise potentials.
+    factors : dict (id -> Factor)
     """
     self.nodes = nodes
-    self.edges = edges
+    self.factors = factors
 
-    # Single lambdas for each type of potential, since throwing around lambdas
-    # everywhere isn't efficient.
-    self.node_pot = node_pot
-    self.edge_pot = edge_pot
-
-def neighbors(mrf, v):
-  """Get the neighbors of a given vertex.
-
-  Parameters
-  ----------
-  v : node
-
-  Returns
-  -------
-  List of nodes that are connected to v.
-  """
-  return [t for t in mrf.nodes if ((v, t) in mrf.edges)
-                               or ((t, v) in mrf.edges)]
+# def neighbors(mrf, v):
+#   """Get the neighbors of a given vertex.
+#
+#   Parameters
+#   ----------
+#   v : node
+#
+#   Returns
+#   -------
+#   List of nodes that are connected to v.
+#   """
+#   return [t for t in mrf.nodes if ((v, t) in mrf.edges)
+#                                or ((t, v) in mrf.edges)]
 
 def calc_potentials(mrf, x):
   """Calculate all unary and pairwise log potentials.
@@ -47,36 +41,33 @@ def calc_potentials(mrf, x):
 
   Returns
   -------
-  node_pot : dict (s -> [pot])
-      Log unary potentials.
-  edge_pot : dict ((s,t) -> [[pot]])
-      Matrix of log pairwise potentials.
+  pots : dict (id -> np.array)
+      Log factor potentials.
   """
-  node_pot = {}
-  edge_pot = {}
+  pots = {}
 
-  for s in mrf.nodes:
-    node_pot[s] = np.array([mrf.node_pot(s, x_s) for x_s in x[s]])
+  def _axisify(arr, target_axis, total_axes):
+    shape = np.ones(total_axes)
+    shape[target_axis] = len(arr)
+    return np.reshape(arr, shape)
 
-  for (s, t) in mrf.edges:
-    pot_st = np.zeros((len(x[s]), len(x[t])))
-    for (n_s, x_s) in enumerate(x[s]):
-      for (n_t, x_t) in enumerate(x[t]):
-        pot_st[n_s, n_t] = mrf.edge_pot(s, t, x_s, x_t)
-    edge_pot[(s, t)] = pot_st
+  for fid, f in mrf.factors.items():
+    vf = np.vectorize(f.potential, otypes=[np.float])
+    total_axes = len(f.nodes)
+    reshaped = [_axisify(x[v], i, total_axes)
+                for (i, v) in enumerate(f.nodes)]
+    pots[fid] = vf(*reshaped)
 
-  return node_pot, edge_pot
+  return pots
 
-def log_prob_states(mrf, node_pot, edge_pot, states):
+def log_prob_states(mrf, pots, states):
   """Evaluate the log probability of a particular state sequence.
 
   Parameters
   ----------
   mrf : MRF
-  node_pot : dict (v -> array of unary potentials)
-      The log unary potentials for each particle at each node.
-  edge_pot : dict ((s, t) -> Ns x Nt matrix of pairwise potentials)
-      The log pairwise potentials for every pair of particles across each edge.
+  pots : dict (factor -> array of potentials)
+      The log potentials for each factor.
   states : dict (v -> int)
       A representation of the state of every node.
 
@@ -84,5 +75,8 @@ def log_prob_states(mrf, node_pot, edge_pot, states):
   -------
   The log probability of the given state assignment.
   """
-  return sum(node_pot[v][states[v]] for v in mrf.nodes) \
-       + sum(edge_pot[(s, t)][states[s], states[t]] for (s, t) in mrf.edges)
+  logprob = 0
+  for fid, f in mrf.factors.items():
+    ixs = tuple([states[v] for v in f.nodes])
+    logprob += pots[fid][ixs]
+  return logprob
