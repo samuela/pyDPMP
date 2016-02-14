@@ -3,24 +3,49 @@ import numpy as np
 from .mrf import log_prob_states, neighboring_factors
 from .util import axisify
 
-# def fwd_bwd_sched(mrf):
-#   """Constructs a forward-backward message update schedule.
-#
-#   It's assumed that the nodes are in a chain in the order they appear in
-#   `mrf.nodes` and that there is exactly one
-#
-#   Parameters
-#   ----------
-#   mrf : MRF
-#
-#   Returns
-#   -------
-#   Message update schedule.
-#   """
-#   [(v1, fid), (fid, v2)]
-#
-#   return list(zip(mrf.nodes, mrf.nodes[1:])) \
-#        + list(zip(reversed(mrf.nodes), reversed(mrf.nodes[:-1])))
+def tree_sched(mrf, root):
+  """Constructs a forward-backward schedule on tree-structured graphs."""
+
+  visited = set([root])
+  frontier = set([root])
+  fwd_sched = []
+  while len(visited) < len(mrf.nodes) + len(mrf.factors.items()):
+    new_wave = []
+    for fn in frontier:
+      nbrs = None
+      if fn in mrf.nodes:
+        # fn is a node
+        nbrs = set(neighboring_factors(mrf, fn)) - visited
+      else:
+        # fn is a factor
+        nbrs = set(mrf.factors[fn].nodes) - visited
+      fwd_sched.extend([(fn, n) for n in nbrs])
+      new_wave.extend(nbrs)
+
+    visited |= set(new_wave)
+    frontier |= set(new_wave)
+
+  bwd_sched = list(reversed([(t, s) for (s, t) in fwd_sched]))
+  return fwd_sched + bwd_sched
+
+def fwd_bwd_sched(mrf):
+  """Constructs a forward-backward message update schedule.
+
+  It's assumed that the factors are in a chain in sorted order.
+
+  Parameters
+  ----------
+  mrf : MRF
+
+  Returns
+  -------
+  Message update schedule.
+  """
+  factors = sorted(mrf.factors.items(), key=lambda kv: kv[0])
+  return [s
+          for (fid, f) in factors
+          for v in f.nodes
+          for s in [(v, fid), (fid, v)]]
 
 def full_sched(mrf):
   """Returns a complete message update schedule that runs in no particular

@@ -1,5 +1,5 @@
-# from .dpmp import *
-# from . import messagepassing
+from .dpmp import *
+from . import messagepassing
 from . import mrf
 # from . import particleselection
 # from . import proposals

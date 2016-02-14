@@ -89,18 +89,19 @@ def DPMP_infer(mrf,
 
     # Construct augmented particle set
     x_aug = {v: x[v] + list(x_prop[v]) for v in mrf.nodes}
+    nStates = {v: len(x_aug[v]) for v in mrf.nodes}
 
     # Calculate potentials on the augmented particle set
     if verbose: print('    ... Calculating potentials and MAP')
     if verbose: print('        ... potentials')
-    node_pot, edge_pot = calc_potentials(mrf, x_aug)
+    pots = calc_potentials(mrf, x_aug)
 
     # Calculate messages, log beliefs, and MAP states
     if verbose: print('        ... message passing')
-    msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
-    node_bel_aug, _ = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
+    msgs, msg_passing_stats = msg_passing.messages(pots, nStates)
+    node_bel_aug, _ = msg_passing.log_beliefs(pots, msgs)
     map_states, n_ties = decode_MAP_states(mrf, node_bel_aug)
-    logP_map = log_prob_states(mrf, node_pot, edge_pot, map_states)
+    logP_map = log_prob_states(mrf, pots, map_states)
     xMAP = {v: x_aug[v][map_states[v]] for v in mrf.nodes}
 
     stats['logP'].append(logP_map)
@@ -109,8 +110,8 @@ def DPMP_infer(mrf,
 
     # Particle selection
     if verbose: print('    ... Selecting particles')
-    accept_idx = particle_selection.select(mrf, map_states, msg_passing, msgs, \
-        x_aug, nParticles, node_pot, edge_pot, temp)
+    accept_idx = particle_selection.select(mrf, nStates, map_states, msg_passing, msgs, \
+        nParticles, pots, temp)
     x_sel = {v: [x_aug[v][i] for i in accept_idx[v]] for v in mrf.nodes}
 
     # Set particles to be the selected particle set
@@ -150,11 +151,12 @@ def DPMP_infer(mrf,
       break
 
   # Run final message passing
-  node_pot, edge_pot = calc_potentials(mrf, x)
+  pots = calc_potentials(mrf, x)
+  nStates = {v: len(x[v]) for v in mrf.nodes}
 
-  msgs, msg_passing_stats = msg_passing.messages(node_pot, edge_pot)
-  node_bel_aug, _ = msg_passing.log_beliefs(node_pot, edge_pot, msgs)
-  map_states, n_ties = decode_MAP_states(mrf, node_bel_aug)
+  msgs, msg_passing_stats = msg_passing.messages(pots, nStates)
+  node_bel, _ = msg_passing.log_beliefs(pots, msgs)
+  map_states, n_ties = decode_MAP_states(mrf, node_bel)
   xMAP = {v: x[v][map_states[v]] for v in mrf.nodes}
 
   return xMAP, x, stats

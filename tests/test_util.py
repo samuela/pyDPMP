@@ -26,6 +26,47 @@ def random_tree_mrf(V):
 
   return MRF(nodes, merge_dicts(node_factors, edge_factors))
 
+def random_tree_mrf2(V):
+  """Constructs a random tree-structured MRF with random potentials. The number
+  nodes and factors will be V in total. The resulting MRF will be defined on
+  binary variables."""
+  # First we construct a random tree.
+  weights = np.triu(np.random.rand(V, V), 1)
+  tree = minimum_spanning_tree(weights).toarray() > 0.0
+  print tree
+
+  tree_nodes = range(V)
+  tree_edges = zip(*np.where(tree))
+
+  print tree_edges
+
+  nbrs = {v: [a for a in tree_nodes
+              if ((a, v) in tree_edges or (v, a) in tree_edges)]
+          for v in tree_nodes}
+
+  # Now we sort the tree nodes into MRF nodes and factors
+  nodes = set([tree_nodes[0]])
+  factors = set([])
+  while len(nodes) + len(factors) < V:
+    factors.update([a for v in nodes for a in nbrs[v]])
+    nodes.update([a for v in factors for a in nbrs[v]])
+
+  pots = {f: np.log(np.random.rand(*([2] * len(nbrs[f]))))
+          for f in factors}
+
+  print nodes
+  print factors
+  print nbrs
+  print pots
+
+  def get_factor_lambda(f):
+    def lam(*args):
+      return pots[f][tuple(args)]
+    return lam
+
+  return MRF(nodes, {'f{}'.format(f): Factor(nbrs[f], get_factor_lambda(f))
+                     for f in factors})
+
 def random_mrf(V, p):
   nodes = range(V)
   edges = []
@@ -47,7 +88,7 @@ def random_mrf(V, p):
 def mrf_brute_MAP(mrf, pots, nStates):
   """Compute the MAP by brute force. Assumes that the nodes are 0, 1, 2, ..."""
   ranges = [range(nStates[v]) for v in mrf.nodes]
-  best_map = max(itertools.product(*ranges),
+  best_map = max([dict(zip(mrf.nodes, s)) for s in itertools.product(*ranges)],
                  key=lambda s: log_prob_states(mrf, pots, s))
 
   # We generally use dicts for the MAP states, so convert for consistency
