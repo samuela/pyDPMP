@@ -3,4 +3,4 @@
 from . import mrf
 # from . import particleselection
 # from . import proposals
-# from . import util
+from . import util

@@ -1,6 +1,6 @@
 import numpy as np
 from collections import namedtuple
-
+from .util import axisify
 
 Factor = namedtuple('Factor', ['nodes', 'potential'])
 
@@ -16,19 +16,18 @@ class MRF(object):
     self.nodes = nodes
     self.factors = factors
 
-# def neighbors(mrf, v):
-#   """Get the neighbors of a given vertex.
-#
-#   Parameters
-#   ----------
-#   v : node
-#
-#   Returns
-#   -------
-#   List of nodes that are connected to v.
-#   """
-#   return [t for t in mrf.nodes if ((v, t) in mrf.edges)
-#                                or ((t, v) in mrf.edges)]
+def neighboring_factors(mrf, v):
+  """Get the neighboring factors of a given vertex.
+
+  Parameters
+  ----------
+  v : node
+
+  Returns
+  -------
+  List of ids of factors that are connected to v.
+  """
+  return [fid for (fid, f) in mrf.factors.items() if v in f.nodes]
 
 def calc_potentials(mrf, x):
   """Calculate all unary and pairwise log potentials.
@@ -46,16 +45,10 @@ def calc_potentials(mrf, x):
   """
   pots = {}
 
-  def _axisify(arr, target_axis, total_axes):
-    shape = np.ones(total_axes)
-    shape[target_axis] = len(arr)
-    return np.reshape(arr, shape)
-
   for fid, f in mrf.factors.items():
     vf = np.vectorize(f.potential, otypes=[np.float])
     total_axes = len(f.nodes)
-    reshaped = [_axisify(x[v], i, total_axes)
-                for (i, v) in enumerate(f.nodes)]
+    reshaped = [axisify(x[v], i, total_axes) for (i, v) in enumerate(f.nodes)]
     pots[fid] = vf(*reshaped)
 
   return pots
@@ -75,7 +68,7 @@ def log_prob_states(mrf, pots, states):
   -------
   The log probability of the given state assignment.
   """
-  logprob = 0
+  logprob = 0.0
   for fid, f in mrf.factors.items():
     ixs = tuple([states[v] for v in f.nodes])
     logprob += pots[fid][ixs]
