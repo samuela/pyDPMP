@@ -7,7 +7,7 @@ from pyDPMP.util import seeded
 @seeded
 def test_random_walk_proposal():
   d = 10
-  mrf = MRF([0], [], None, None)
+  mrf = MRF([0], {})
   prop = random_walk_proposal(np.eye(d))
   x = {0: [np.zeros(d)]}
   nAdd = {0: 1000}
