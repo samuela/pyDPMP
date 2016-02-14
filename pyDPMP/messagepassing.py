@@ -131,11 +131,13 @@ class MaxSumMP(MessagePassingScheme):
     self.sched = full_sched(mrf) if sched == None else sched
 
   def vf_message(self, pots, msgs, v, fid):
+    """Calculate the variable to factor message from v to fid."""
     return sum([msgs[(fid0, v)]
                 for fid0 in neighboring_factors(self.mrf, v)
                 if fid0 != fid])
 
   def fv_message(self, pots, msgs, fid, v):
+    """Calculate the factor to variable message from fid to v."""
     factor = self.mrf.factors[fid]
     total_axes = len(factor.nodes)
 
