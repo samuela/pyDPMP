@@ -33,12 +33,9 @@ def random_tree_mrf2(V):
   # First we construct a random tree.
   weights = np.triu(np.random.rand(V, V), 1)
   tree = minimum_spanning_tree(weights).toarray() > 0.0
-  print tree
 
   tree_nodes = range(V)
   tree_edges = zip(*np.where(tree))
-
-  print tree_edges
 
   nbrs = {v: [a for a in tree_nodes
               if ((a, v) in tree_edges or (v, a) in tree_edges)]
@@ -53,11 +50,6 @@ def random_tree_mrf2(V):
 
   pots = {f: np.log(np.random.rand(*([2] * len(nbrs[f]))))
           for f in factors}
-
-  print nodes
-  print factors
-  print nbrs
-  print pots
 
   def get_factor_lambda(f):
     def lam(*args):
