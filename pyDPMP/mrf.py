@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from collections import namedtuple
 from .util import axisify
 
@@ -46,10 +47,27 @@ def calc_potentials(mrf, x):
   pots = {}
 
   for fid, f in mrf.factors.items():
-    vf = np.vectorize(f.potential, otypes=[np.float])
-    total_axes = len(f.nodes)
-    reshaped = [axisify(x[v], i, total_axes) for (i, v) in enumerate(f.nodes)]
-    pots[fid] = vf(*reshaped)
+    # vf = np.vectorize(f.potential, otypes=[np.float])
+    # # total_axes = len(f.nodes)
+    # # reshaped = [axisify(x[v], i, total_axes) for (i, v) in enumerate(f.nodes)]
+    # # print reshaped
+    # # pots[fid] = vf(*reshaped)
+    #
+    #
+    # vf = np.vectorize(lambda *ixs: f.potential(*[x[v][ix] for (v, ix) in zip(f.nodes, ixs)]))
+    # shape = [len(x[v]) for v in f.nodes]
+    # # def cons(*ixs):
+    # #   """Lookup up the particles corresponding to the indices ixs and hand them
+    # #   off to the potential function."""
+    # #   print 'ixs', ixs
+    # #   return vf(*[x[v][ix] for (v, ix) in zip(f.nodes, ixs)])
+    #
+    # pots[fid] = np.fromfunction(vf, shape, dtype=int)
+
+    f_pot = np.zeros([len(x[v]) for v in f.nodes])
+    for ixs in itertools.product(*[range(len(x[v])) for v in f.nodes]):
+      f_pot[ixs] = f.potential(*[x[v][ix] for (v, ix) in zip(f.nodes, ixs)])
+    pots[fid] = f_pot
 
   return pots
 
