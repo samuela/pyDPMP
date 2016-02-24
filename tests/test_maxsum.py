@@ -17,8 +17,12 @@ def test_tree_sched2():
                                    ('v1', 'f0'), ('f0', 'v0')]
   assert tree_sched(mrf, 'v1') == [('v1', 'f0'), ('f0', 'v0'),
                                    ('v0', 'f0'), ('f0', 'v1')]
-  assert tree_sched(mrf, 'f0') == [('f0', 'v0'), ('f0', 'v1'),
-                                   ('v1', 'f0'), ('v0', 'f0')]
+
+  # tree_sched may pick either v0 or v1 as the first outgoing message. Therefore
+  # we need to account for either case.
+  valid_scheds = [[('f0', 'v0'), ('f0', 'v1'), ('v1', 'f0'), ('v0', 'f0')],
+                  [('f0', 'v1'), ('f0', 'v0'), ('v0', 'f0'), ('v1', 'f0')]]
+  assert tree_sched(mrf, 'f0') in valid_scheds
 
 def test_maxsum_basic():
   """Test that maxsum converges on a simple graph with 2 nodes."""
