@@ -35,7 +35,7 @@ def random_tree_mrf2(V):
   tree = minimum_spanning_tree(weights).toarray() > 0.0
 
   tree_nodes = range(V)
-  tree_edges = zip(*np.where(tree))
+  tree_edges = list(zip(*np.where(tree)))
 
   nbrs = {v: [a for a in tree_nodes
               if ((a, v) in tree_edges or (v, a) in tree_edges)]
