@@ -3,7 +3,7 @@ import numpy as np
 from pyDPMP.messagepassing import tree_sched, MaxSumMP, decode_MAP_states
 from pyDPMP.mrf import Factor, MRF, calc_potentials, log_prob_states
 from pyDPMP.util import set_seed
-from .test_util import random_tree_mrf, random_tree_mrf2, mrf_brute_MAP
+from .testing_util import random_tree_mrf, random_tree_mrf2, mrf_brute_MAP
 
 
 def test_tree_sched1():
